@@ -1,0 +1,3 @@
+名前 とは 「台帳PostgreSQL試験」
+版 とは 「0.1.0」
+依存 とは 「../../」 と 「../共通」 と 「github.com/suru-lang/postgresql@0.1.0」
