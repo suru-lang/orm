@@ -1,0 +1,84 @@
+# kumu 試験 と kumu 点検(データベースなし)を Linux と macOS で、
+# 結合試験(本物の SQLite・PostgreSQL・MySQL)を Linux で動かします
+name: 試験
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: clang を入れる
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang
+      - name: kumu を入れる
+        run: go install github.com/suru-lang/suru/cmd/kumu@main
+      - name: 試験
+        run: ~/go/bin/kumu 試験
+      - name: 点検
+        run: ~/go/bin/kumu 点検
+
+  databases:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s --health-retries 10
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: suru_test
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd "mysqladmin ping -h 127.0.0.1 -proot" --health-interval 5s --health-timeout 5s --health-retries 20
+    env:
+      PGHOST: localhost
+      PGUSER: postgres
+      PGPASSWORD: postgres
+      PGDATABASE: postgres
+      MYSQL_HOST: 127.0.0.1
+      MYSQL_PORT: 3306
+      MYSQL_USER: root
+      MYSQL_PASSWORD: root
+      MYSQL_DATABASE: suru_test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: stable
+      - name: C のライブラリと clang を入れる
+        run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev libpq-dev libmysqlclient-dev clang pkg-config
+      - name: kumu を入れる
+        run: go install github.com/suru-lang/suru/cmd/kumu@main
+      - name: SQLite
+        working-directory: 結合試験/SQLite
+        run: ~/go/bin/kumu 試験
+      - name: PostgreSQL
+        working-directory: 結合試験/PostgreSQL
+        run: ~/go/bin/kumu 試験
+      - name: MySQL
+        working-directory: 結合試験/MySQL
+        run: ~/go/bin/kumu 試験
+      - name: 例
+        working-directory: 例
+        run: ~/go/bin/kumu 実行
