@@ -53,11 +53,28 @@ m を 紹介文にする とは （m の 番号 を 文字列化する） + 「�
 主処理する
 ```
 
-Replacing `SQLite駆動` with `PostgreSQL駆動` or `MySQL駆動` (and the connection target) runs it on that database. The example is in [例/](例/) (`kumu 実行` there).
+Replacing `SQLite駆動` with `PostgreSQL駆動` or `MySQL駆動` (and the connection target) runs it on that database. The example is in [例/](例/) (`kumu 実行` there); it writes the table in one line with 台帳生成 (below).
+
+## Writing tables in one line (台帳生成)
+
+The record, the two functions and the table definition above can be made from one line. Write the tables in a `.台帳` file, one per line (`#` starts a comment):
+
+```
+利用者 とは 番号 は 主鍵 と 名前 は 文字列 と 年齢 は 整数 と 会員 は 真偽 の 台帳組
+注文 とは 番号 は 主鍵 と 利用者番号 は 利用者 の 参照 と 品名 は 文字列 の 台帳組
+```
+
+Then, in the [生成/](生成/) folder of this repository:
+
+```sh
+kumu 実行 -- 表.台帳 表定義.suru      # or: suru 生成.suru 表.台帳 表定義.suru
+```
+
+表定義.suru has `利用者 とは 番号 と 名前 と 年齢 と 会員 の 組`, `利用者行化する`, `利用者組化する` and `利用者表` (and the same for 注文); load it with `「表定義」 を 読み込んで 使う`. Do not edit it by hand: change the `.台帳` file and make it again.
 
 ## Decisions
 
-1. **A table definition is a record.** `表定義` is the table name, the columns, and two functions: one that turns a record into a row (a list of `DB値` in column order) and one that turns a row back into a record. The language is not changed for this; generating these from the record definition is planned (see Future work).
+1. **A table definition is a record.** `表定義` is the table name, the columns, and two functions: one that turns a record into a row (a list of `DB値` in column order) and one that turns a row back into a record. The language is not changed for this. They can also be made from one line with 台帳生成 (see Writing tables in one line).
 2. **Columns.** `「番号」 の 主鍵列`, `整数列`, `小数列`, `文字列列`, `バイト列列`, `真偽列`, and `参照列` (see Relations below). The first column must be the `主鍵列`, an auto-numbered integer. Column types come from the connection's dialect (`INTEGER PRIMARY KEY`, `BIGSERIAL PRIMARY KEY`, `BIGINT AUTO_INCREMENT PRIMARY KEY` and so on).
 3. **Taking values out of a row.** `値群 から 2 を 番目文字列取出する` (also `番目数取出する`, `番目バイト列取出する`, `番目真偽取出する`) takes the n-th value (from 1). `番目真偽取出する` also accepts 1 and 0, for SQLite and MySQL.
 4. **Saving.** `表 で x を db に 表保存する` INSERTs a record whose primary key is 0 and gives the record with the new number filled in (from `INSERT … RETURNING` where the dialect allows it, otherwise from `DB最終番号取得する`). A record with any other primary key is UPDATEd and given back unchanged.
@@ -69,12 +86,14 @@ Replacing `SQLite駆動` with `PostgreSQL駆動` or `MySQL駆動` (and the conne
 10. **Counting and deleting by condition.** `表 から 条件 を db で 表件数取得する` gives the number of matching rows (COUNT(*)), and `表 から 条件 を db で 表条件削除する` deletes them and gives how many.
 11. **Relations (one-to-many).** In the child table, `親表 を 「利用者番号」 で 参照列にする` is an integer column with `REFERENCES` to the parent's primary key. `子表 から 「利用者番号」 で 番号 を db に 表関連取得する` gives the children of the parent with that number, in primary key order; the parent of a child is `親表 から （子 の 利用者番号） を db で 表取得する`. Create the parent table first and drop the child table first (SQLite checks the reference only with `PRAGMA foreign_keys = ON`).
 12. **The SQL for queries can be seen too.** `条件 を 方言 で 条件句にする` gives a `表句` (`句文`, the text after WHERE, and `句値群`, the values for its 「?」). `表 から 照会 を 方言 で 表照会文にする` and `表 から 条件 を 方言 で 表件数文にする` give the whole SQL.
+13. **台帳生成 reads its own one-line format.** A record definition in Suru has no field types, so the table cannot be made from it; instead the `.台帳` line names each column with its type, and the record is made from it. Column types are `主鍵`, `整数`, `小数`, `文字列`, `バイト列`, `真偽` and `表 の 参照` (a `参照列` to that table). The first column must be `主鍵`, and there is only one. The record's name is the table's name and the definition is named with 「表」 added (`利用者表`). A wrong line is reported with its line number (`表.台帳 の 2行目: 列の型『年』はありません…`). The tool is written in Suru (生成/台帳生成.suru, with no dependencies) and is checked in CI: the example and the integration tests use files made by it, and CI makes them again and compares.
 
 ## Tests
 
 ```sh
 kumu 試験          # the SQL it builds, for the three dialects (no database)
 kumu 点検
+(cd 生成 && kumu 試験)   # 台帳生成
 ```
 
 [結合試験/](結合試験/) runs the same tests (save, update, get, search, conditions, ordering and limits, relations, delete, rollback) on real databases: `kumu 試験` in 結合試験/SQLite, 結合試験/PostgreSQL (`PGHOST` etc.) and 結合試験/MySQL (`MYSQL_HOST` etc.). The shared test body is 結合試験/共通/台帳共通試験.suru.
@@ -82,7 +101,7 @@ kumu 点検
 ## Future work
 
 - Fetching the children together with the parents in one query (JOIN), and many-to-many through a join table
-- Generating the table definition from the record definition (with lib/構文.suru)
+- In 台帳生成: a table name different from the record's name, columns that can be NULL (`有無`)
 - Migrations (adding columns)
 
 ## License

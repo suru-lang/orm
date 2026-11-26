@@ -1,4 +1,4 @@
-# kumu 試験 と kumu 点検(データベースなし)を Linux と macOS で、
+# kumu 試験 と kumu 点検(データベースなし)と台帳生成の試験を Linux と macOS で、
 # 結合試験(本物の SQLite・PostgreSQL・MySQL)を Linux で動かします
 name: 試験
 
@@ -30,6 +30,16 @@ jobs:
         run: ~/go/bin/kumu 試験
       - name: 点検
         run: ~/go/bin/kumu 点検
+      - name: 台帳生成の試験
+        working-directory: 生成
+        run: ~/go/bin/kumu 試験
+      - name: 作ったファイルが .台帳 と合っているか
+        working-directory: 生成
+        run: |
+          for d in ../例 ../結合試験/共通; do
+            ~/go/bin/kumu 実行 -- "$d/表.台帳" "$RUNNER_TEMP/表定義.suru"
+            diff "$RUNNER_TEMP/表定義.suru" "$d/表定義.suru"
+          done
 
   databases:
     runs-on: ubuntu-latest
