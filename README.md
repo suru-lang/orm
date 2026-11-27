@@ -106,7 +106,7 @@ kumu 実行 -- 表.台帳 表定義.suru      # or: suru 生成.suru 表.台帳 
 
 ## API documentation
 
-The API documentation is made from the comments in `台帳.suru`: the head comment of the file and the comment right above each public definition, written in English.
+The API documentation is made from the comments in `台帳.suru`: the head comment of the file and the comment right above each public definition, written in English. It is published at https://orm.readthedocs.io/en/latest/.
 
 ```sh
 kumu 文書                                                            # writes docs/api/台帳.md
