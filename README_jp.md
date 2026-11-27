@@ -106,7 +106,7 @@ kumu 実行 -- 表.台帳 表定義.suru      # か: suru 生成.suru 表.台帳
 
 ## API ドキュメント
 
-API ドキュメントは `台帳.suru` の注釈から作ります。ファイルの頭の注釈と、公開の定義のすぐ上の注釈で、英語で書いています。公開先は https://orm.readthedocs.io/en/latest/ です。
+API ドキュメントは `台帳.suru` の注釈から作ります。ファイルの頭の注釈と、公開の定義のすぐ上の注釈で、英語で書いています。公開先は https://suru-lang-orm.readthedocs.io/en/latest/ です。
 
 ```sh
 kumu 文書                                                            # docs/api/台帳.md を書く
