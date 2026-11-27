@@ -1,40 +1,34 @@
 # SPDX-License-Identifier: MIT
 # Copyright (c) 2026 sugarsweetrobotics(LICENSE)
-# 「する」の O/R マッパー「台帳」(組とデータベースの表を対応させます。データベースの層「蔵」の上で動きます)
-# kumu 追加 github.com/suru-lang/orm で依存に足し、使うファイルに 「台帳」 を 読み込んで 使う と書きます。
-# データベースにつなぐのは「蔵」と駆動です(「蔵」 を 読み込んで 使う と、SQLite駆動 などの駆動)。
+# 「台帳」, the O/R mapper of Suru. It maps records to database tables, on top of the database layer 「蔵」.
+# Add it with `kumu 追加 github.com/suru-lang/orm` and write `「台帳」 を 読み込んで 使う` in your file.
+# The connection to the database is made with 「蔵」 and a driver (`「蔵」 を 読み込んで 使う` and a driver such as `SQLite駆動`).
 #
-# 表定義 は、表の名前・列・組と行の行き来の仕方の組です:
-#   利用者表 とは 「利用者」 と 利用者列群 と 利用者行化すること と 利用者組化すること の 表定義
-#   列は 「番号」 の 主鍵列・「名前」 の 文字列列・整数列・小数列・バイト列列・真偽列 で、最初の列を主鍵列(自動採番の数)にします。
-#   行化 は組を列の順の DB値 のリストにする関数、組化 はその逆です(値群 から 2 を 番目文字列取出する などが使えます)。
-#   主鍵が 0 の組は、まだ表にない新しい組です。
-#   フィールドの型を書いた組なら、会員 は 【表】 を 導出する で 会員行化する・会員組化する・会員表 を作れます(する 0.10.0 以上)。
+# A `表定義` is a record of the table name, the columns, and how to go between records and rows:
 #
-# どれも動作です(db は「蔵」の DB接続):
-#   表 を db に 表作成する              … 表がなければ作る(CREATE TABLE IF NOT EXISTS。列の型は方言から)
-#   表 で x を db に 表保存する          … 主鍵が 0 なら INSERT して、振られた番号を入れた組を返す。ほかは UPDATE して x を返す
-#   表 から 番号 を db で 表取得する      … 主鍵で1つ取る(なければ 無、あれば 組 の 有)
-#   表 から 条件 を 値群 で db に 表検索する … WHERE 条件(「年齢 > ?」など。「?」に値群)に合う組のリスト
-#   表 から db に 表全件取得する          … 全部の組のリスト(主鍵の順)
-#   表 で x を db に 表削除する          … 主鍵で消して、消した行の数
-#   表 から 条件 を db で 表条件検索する   … 値で書いた条件(表条件)に合う組のリスト(主鍵の順)
-#   表 から 照会 を db で 表照会する       … 条件・並べ方・上限・開始(表照会)で取る
-#   表 から 条件 を db で 表件数取得する   … 合う行の数
-#   表 から 条件 を db で 表条件削除する   … 合う行を消して、消した数
-#   子表 から 列名 で 番号 を db に 表関連取得する … 子の表の 列名 が 番号 の組(1対多)
-# 条件: 全件条件、「年齢」 と （20 の DB数） の 以上条件(等号・不等・未満・以下・超過)、「名前」 と 「花%」 の 類似条件、
-#   「名前」 の 無値条件、「番号」 と 値群 の 含有条件、条件群 の 全部条件(AND)・一部条件(OR)、c の 否定条件
-# 照会: 条件 を 照会にして 「年齢」 で 降順並べして(昇順並べ) 10 で 上限付けして 20 で 開始付けする
-# 参照列: 親表 を 「利用者番号」 で 参照列にする(親の主鍵への REFERENCES が付いた整数の列)
-# SQL を見るための純粋な関数(方言は db の DB方言値):
-#   表 を 方言 で 表作成文にする・表挿入文にする・表更新文にする・表選択文にする・表削除文にする
-#   条件 を 方言 で 条件句にする(表句: 句文 と 句値群)、表 から 照会 を 方言 で 表照会文にする、表 から 条件 を 方言 で 表件数文にする
+# ```suru
+# 利用者表 とは 「利用者」 と 利用者列群 と 利用者行化すること と 利用者組化すること の 表定義
+# ```
+#
+# - The columns are `「番号」 の 主鍵列`, `「名前」 の 文字列列`, `整数列`, `小数列`, `バイト列列` and `真偽列`. The first column is the primary key (an auto-numbered number).
+# - The row function turns a record into the list of `DB値` in column order, and the record function does the reverse (`値群 から 2 を 番目文字列取出する` and so on help).
+# - A record whose primary key is 0 is new and not in the table yet.
+# - For a record with field types, `会員 は 【表】 を 導出する` makes `会員行化する`, `会員組化する` and `会員表` (Suru 0.10.0 or later).
+#
+# The functions that touch the database are actions (db is the `DB接続` of 「蔵」).
+#
+# Conditions (`表条件`): `全件条件`, `「年齢」 と （20 の DB数） の 以上条件` (also `等号条件`, `不等条件`, `未満条件`, `以下条件` and `超過条件`), `「名前」 と 「花%」 の 類似条件`, `「名前」 の 無値条件`, `「番号」 と 値群 の 含有条件`, `条件群 の 全部条件` (AND), `条件群 の 一部条件` (OR) and `c の 否定条件`.
+#
+# Queries (`表照会`): `条件 を 照会にして 「年齢」 で 降順並べして 10 で 上限付けして 20 で 開始付けする`.
+#
+# The functions that end in `文にする` give the SQL without running it, for the dialect of the database (`db の DB方言値`).
 「標準」 を 読み込んで 使う
 「蔵」 を 読み込んで 使う
 「導出」 を 読み込んで 使う
 
+# A column: `主鍵列` (the auto-numbered primary key), `整数列`, `小数列`, `文字列列`, `バイト列列`, `真偽列`, or `参照列` (an integer column that references another table's primary key). Each has the column name.
 表列 とは 列名 の 主鍵列 か 列名 の 整数列 か 列名 の 小数列 か 列名 の 文字列列 か 列名 の バイト列列 か 列名 の 真偽列 か 列名 と 参照表名 と 参照列名 の 参照列
+# A table: its name, its columns, the function that turns a record into a row (a list of `DB値` in column order) and the function that turns a row back into a record.
 表定義 とは 表名 と 表列群 と 表行化 と 表組化 の 組
 
 # --- SQL を作る ---
@@ -70,25 +64,30 @@ t を 方言 で 値列名群囲みする とは （t の 表列群 の 残り�
 数 を 問符群にする は 文字列
 n を 問符群にする とは （「?」 を n で 複製する） を 「, 」 で 結合する
 
+# The CREATE TABLE IF NOT EXISTS statement of the table, with column types from the dialect.
 表定義 を DB方言 で 表作成文にする は 文字列
 t を 方言 で 表作成文にする とは
   列群 とは （t の 表列群） を （c を 受け取って c を 方言 で 列宣言にする を 返すこと） で 写像する
   「CREATE TABLE IF NOT EXISTS 」 + （t を 方言 で 表名囲みする） + 「 (」 + （列群 を 「, 」 で 結合する） + 「)」
 
+# The INSERT statement of the table, with a 「?」 for each column except the primary key (with RETURNING when the dialect has it).
 表定義 を DB方言 で 表挿入文にする は 文字列
 t を 方言 で 表挿入文にする とは
   名群 とは t を 方言 で 値列名群囲みする
   本体 とは 「INSERT INTO 」 + （t を 方言 で 表名囲みする） + 「 (」 + （名群 を 「, 」 で 結合する） + 「) VALUES (」 + （名群 の 長さ を 問符群にする） + 「)」
   もし 方言 の DB返却句可 ならば 本体 + 「 RETURNING 」 + （t を 方言 で 主鍵囲みする） そうでなければ 本体
 
+# The UPDATE statement of the table, by the primary key.
 表定義 を DB方言 で 表更新文にする は 文字列
 t を 方言 で 表更新文にする とは
   組群 とは （t を 方言 で 値列名群囲みする） を （n を 受け取って n + 「 = ?」 を 返すこと） で 写像する
   「UPDATE 」 + （t を 方言 で 表名囲みする） + 「 SET 」 + （組群 を 「, 」 で 結合する） + 「 WHERE 」 + （t を 方言 で 主鍵囲みする） + 「 = ?」
 
+# The SELECT statement of all the columns of the table, without a condition.
 表定義 を DB方言 で 表選択文にする は 文字列
 t を 方言 で 表選択文にする とは 「SELECT 」 + （（t を 方言 で 列名群囲みする） を 「, 」 で 結合する） + 「 FROM 」 + （t を 方言 で 表名囲みする）
 
+# The DELETE statement that deletes one row by the primary key.
 表定義 を DB方言 で 表削除文にする は 文字列
 t を 方言 で 表削除文にする とは 「DELETE FROM 」 + （t を 方言 で 表名囲みする） + 「 WHERE 」 + （t を 方言 で 主鍵囲みする） + 「 = ?」
 
@@ -104,15 +103,19 @@ t で 値群 を 組値にする とは
   組化 とは t の 表組化
   値群 を 組化する
 
+# The number at position i (from 1) of the row's values, for a record function.
 DB値 の リスト から 数 を 番目数取出する は 数
 値群 から i を 番目数取出する とは （値群 から i を 番目取得する） を DB数取出する
 
+# The string at position i (from 1) of the row's values, for a record function.
 DB値 の リスト から 数 を 番目文字列取出する は 文字列
 値群 から i を 番目文字列取出する とは （値群 から i を 番目取得する） を DB文字列取出する
 
+# The bytes at position i (from 1) of the row's values, for a record function.
 DB値 の リスト から 数 を 番目バイト列取出する は バイト列
 値群 から i を 番目バイト列取出する とは （値群 から i を 番目取得する） を DBバイト列取出する
 
+# The truth value at position i (from 1) of the row's values, for a record function (1 and 0 count too).
 DB値 の リスト から 数 を 番目真偽取出する は 真偽
 値群 から i を 番目真偽取出する とは （値群 から i を 番目取得する） を DB真偽取出する
 
@@ -124,6 +127,7 @@ v が 新主鍵である とは 偽
 
 # --- 条件を値で書く ---
 
+# A condition written with values: `全件条件` (every row), a comparison of a column with a value (`等号条件`, `不等条件`, `未満条件`, `以下条件`, `超過条件`, `以上条件`), `類似条件` (LIKE), `無値条件` (IS NULL), `含有条件` (IN), `全部条件` (AND), `一部条件` (OR) or `否定条件` (NOT).
 表条件 とは 全件条件
   か 条件列名 と 条件値 の 等号条件
   か 条件列名 と 条件値 の 不等条件
@@ -138,7 +142,7 @@ v が 新主鍵である とは 偽
   か 条件群 の 一部条件
   か 否定対象 の 否定条件
 
-# WHERE の後ろの文と、その「?」に入れる値
+# The text after WHERE and the values for its 「?」 placeholders.
 表句 とは 句文 と 句値群 の 組
 
 文字列 に DB値 を 文字列 で DB方言 より 比較句にする は 表句
@@ -151,6 +155,7 @@ n に v を 記号 で 方言 より 比較句にする とは （（n を 方�
     空 ならば 空の文 と 空 の 表句
     そうでなければ （「(」 + （（句群 を （h を 受け取って h の 句文 を 返すこと） で 写像する） を 繋ぎ で 結合する） + 「)」） と （（句群 を （h を 受け取って h の 句値群 を 返すこと） で 写像する） を 連結する） の 表句
 
+# The condition as SQL for the dialect: the WHERE text and its values.
 表条件 を DB方言 で 条件句にする は 表句
 全件条件 を 方言 で 条件句にする とは 「1 = 1」 と 空 の 表句
 （n と v の 等号条件） を 方言 で 条件句にする とは n に v を 「=」 で 方言 より 比較句にする
@@ -173,21 +178,28 @@ n に v を 記号 で 方言 より 比較句にする とは （（n を 方�
 
 # --- 並べ方と件数 ---
 
+# An ordering: `昇順` (ascending) or `降順` (descending) by a column.
 表並び とは 並び列名 の 昇順 か 並び列名 の 降順
+# A query: the condition, the orderings, the limit and the offset.
 表照会 とは 照会条件 と 照会並び群 と 照会上限 と 照会開始 の 組
 
+# A query with the condition c, no ordering, no limit and no offset.
 表条件 を 照会にする は 表照会
 c を 照会にする とは c と 空 と 0 と 0 の 表照会
 
+# The query with one more ordering, ascending by the column n.
 表照会 を 文字列 で 昇順並べする は 表照会
 q を n で 昇順並べする とは 照会並び群 は （（q の 照会並び群） + （（n の 昇順） を 空 に 挿入する）） の q
 
+# The query with one more ordering, descending by the column n.
 表照会 を 文字列 で 降順並べする は 表照会
 q を n で 降順並べする とは 照会並び群 は （（q の 照会並び群） + （（n の 降順） を 空 に 挿入する）） の q
 
+# The query with the limit n (LIMIT).
 表照会 を 数 で 上限付けする は 表照会
 q を n で 上限付けする とは 照会上限 は n の q
 
+# The query that skips the first n rows (OFFSET).
 表照会 を 数 で 開始付けする は 表照会
 q を n で 開始付けする とは 照会開始 は n の q
 
@@ -204,23 +216,27 @@ t から q を 方言 で 照会句にする とは
   開始 とは もし （q の 照会開始） > 0 ならば 「 OFFSET 」 + （（q の 照会開始） を 文字列化する） そうでなければ 「」
   （（句 の 句文） + 「 ORDER BY 」 + 並び群 + 上限 + 開始） と （句 の 句値群） の 表句
 
+# The SELECT statement of the query.
 表定義 から 表照会 を DB方言 で 表照会文にする は 文字列
 t から q を 方言 で 表照会文にする とは （t を 方言 で 表選択文にする） + 「 WHERE 」 + （（t から q を 方言 で 照会句にする） の 句文）
 
+# The SELECT COUNT(*) statement for the condition.
 表定義 から 表条件 を DB方言 で 表件数文にする は 文字列
 t から c を 方言 で 表件数文にする とは 「SELECT COUNT(*) FROM 」 + （t を 方言 で 表名囲みする） + 「 WHERE 」 + （（c を 方言 で 条件句にする） の 句文）
 
 # --- 参照(1対多) ---
 
-# 親の表の主鍵を指す列(子の表に置く)
+# A column for the child table, named n, that references the primary key of the parent table t.
 表定義 を 文字列 で 参照列にする は 表列
 t を n で 参照列にする とは n と （t の 表名） と （t の 表列群 の 先頭 の 列名） の 参照列
 
 # --- 表を使う ---
 
+# Creates the table when it does not exist (CREATE TABLE IF NOT EXISTS, with column types from the dialect).
 表定義 を DB接続 に 表作成する は 数 を 返す 入出力動作
 t を db に 表作成する とは db に （t を （db の DB方言値） で 表作成文にする） を DB実行する
 
+# Saves the record. When its primary key is 0 it is inserted, and the record with the new number is given back. Otherwise it is updated and x is given back.
 表定義 で 甲 を DB接続 に 表保存する は 甲 を 返す 入出力動作
 t で x を db に 表保存する とは
   値群 とは t で x を 行値群にする
@@ -254,6 +270,7 @@ t で x を db に 更新保存する とは 入出力手順
   db に （t を （db の DB方言値） で 表更新文にする） を （（値群 の 先頭） を （値群 の 残り） に 追加する） で DB差込実行する
   x を 結果にする
 
+# The record with the primary key 番号, in `有`, or `無` when there is none.
 表定義 から 数 を DB接続 で 表取得する は 甲 の 有無 を 返す 入出力動作
 t から 番号 を db で 表取得する とは 入出力手順
   方言 とは db の DB方言値
@@ -263,12 +280,14 @@ t から 番号 を db で 表取得する とは 入出力手順
     空 ならば 無 を 結果にする
     先頭 は 行 で 残り は 他 ならば （（t で 行 を 組値にする） の 有） を 結果にする
 
+# The records that match the WHERE condition 条件 (such as 「年齢 > ?」), with the values put into its 「?」 placeholders.
 表定義 から 文字列 を DB値 の リスト で DB接続 に 表検索する は 甲 の リスト を 返す 入出力動作
 t から 条件 を 値群 で db に 表検索する とは 入出力手順
   文 とは （t を （db の DB方言値） で 表選択文にする） + 「 WHERE 」 + 条件
   行群 とは db に 文 を 値群 で DB差込問合した 結果
   （行群 を （行 を 受け取って t で 行 を 組値にする を 返すこと） で 写像する） を 結果にする
 
+# All the records, in the order of the primary key.
 表定義 から DB接続 に 表全件取得する は 甲 の リスト を 返す 入出力動作
 t から db に 表全件取得する とは 入出力手順
   方言 とは db の DB方言値
@@ -276,11 +295,13 @@ t から db に 表全件取得する とは 入出力手順
   行群 とは db に 文 を DB問合した 結果
   （行群 を （行 を 受け取って t で 行 を 組値にする を 返すこと） で 写像する） を 結果にする
 
+# Deletes the record by its primary key and gives the number of deleted rows.
 表定義 で 甲 を DB接続 に 表削除する は 数 を 返す 入出力動作
 t で x を db に 表削除する とは
   値群 とは t で x を 行値群にする
   db に （t を （db の DB方言値） で 表削除文にする） を （（値群 の 先頭） を 空 に 挿入する） で DB差込実行する
 
+# The records that the query q gives (condition, ordering, limit and offset).
 表定義 から 表照会 を DB接続 で 表照会する は 甲 の リスト を 返す 入出力動作
 t から q を db で 表照会する とは 入出力手順
   方言 とは db の DB方言値
@@ -289,9 +310,11 @@ t から q を db で 表照会する とは 入出力手順
   行群 とは db に 文 を （句 の 句値群） で DB差込問合した 結果
   （行群 を （行 を 受け取って t で 行 を 組値にする を 返すこと） で 写像する） を 結果にする
 
+# The records that match the condition c, in the order of the primary key.
 表定義 から 表条件 を DB接続 で 表条件検索する は 甲 の リスト を 返す 入出力動作
 t から c を db で 表条件検索する とは t から （c を 照会にする） を db で 表照会する
 
+# The number of rows that match the condition c.
 表定義 から 表条件 を DB接続 で 表件数取得する は 数 を 返す 入出力動作
 t から c を db で 表件数取得する とは 入出力手順
   方言 とは db の DB方言値
@@ -299,13 +322,14 @@ t から c を db で 表件数取得する とは 入出力手順
   行群 とは db に （t から c を 方言 で 表件数文にする） を （句 の 句値群） で DB差込問合した 結果
   （行群 の 先頭 の 先頭） を DB数取出して 結果にする
 
+# Deletes the rows that match the condition c and gives their number.
 表定義 から 表条件 を DB接続 で 表条件削除する は 数 を 返す 入出力動作
 t から c を db で 表条件削除する とは
   方言 とは db の DB方言値
   句 とは c を 方言 で 条件句にする
   db に （「DELETE FROM 」 + （t を 方言 で 表名囲みする） + 「 WHERE 」 + （句 の 句文）） を （句 の 句値群） で DB差込実行する
 
-# 子の表の 列 が 親の番号 の行(主鍵の順)
+# The records of the child table whose column 列 is the parent's number 番号, in the order of the primary key (one to many).
 表定義 から 文字列 で 数 を DB接続 に 表関連取得する は 甲 の リスト を 返す 入出力動作
 t から 列 で 番号 を db に 表関連取得する とは t から （列 と （番号 の DB数） の 等号条件） を db で 表条件検索する
 
@@ -314,6 +338,7 @@ t から 列 で 番号 を db に 表関連取得する とは t から （列 
 # 最初のフィールドは主鍵(主鍵列)の 数、ほかは 数(整数列)・文字列・バイト列・真偽 です。
 # 作ったコードは「蔵」と「台帳」の名前を前置きなしで使うので、使うファイルに両方を 読み込んで 使う と書きます。
 
+# The deriver behind `【表】`: from the description of a record type with field types, the Suru code of the row function, the record function and the table definition.
 型記述 を 表導出する は 文字列 の 成否
 d を 表導出する とは
   名 とは d の 型名
