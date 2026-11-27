@@ -25,7 +25,8 @@ jobs:
         if: runner.os == 'Linux'
         run: sudo apt-get update && sudo apt-get install -y clang
       - name: kumu を入れる
-        run: go install github.com/suru-lang/suru/cmd/kumu@main
+        # GOPROXY=direct: プロキシが古い main を返さないように、GitHub から直接取る
+        run: GOPROXY=direct go install github.com/suru-lang/suru/cmd/kumu@main
       - name: 試験
         run: ~/go/bin/kumu 試験
       - name: 点検
@@ -79,7 +80,8 @@ jobs:
       - name: C のライブラリと clang を入れる
         run: sudo apt-get update && sudo apt-get install -y libsqlite3-dev libpq-dev libmysqlclient-dev clang pkg-config
       - name: kumu を入れる
-        run: go install github.com/suru-lang/suru/cmd/kumu@main
+        # GOPROXY=direct: プロキシが古い main を返さないように、GitHub から直接取る
+        run: GOPROXY=direct go install github.com/suru-lang/suru/cmd/kumu@main
       - name: SQLite
         working-directory: 結合試験/SQLite
         run: ~/go/bin/kumu 試験
