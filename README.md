@@ -55,6 +55,21 @@ m を 紹介文にする とは （m の 番号 を 文字列化する） + 「�
 
 Replacing `SQLite駆動` with `PostgreSQL駆動` or `MySQL駆動` (and the connection target) runs it on that database. The example is in [例/](例/) (`kumu 実行` there); it writes the table in one line with 台帳生成 (below).
 
+## Deriving tables (【表】)
+
+With Suru 0.10.0 or later, a record whose fields have types can derive its table. The line `会員 は 【表】 を 導出する` is replaced by `会員行化する`, `会員組化する` and `会員表`, the same definitions as in Usage above:
+
+```
+「蔵」 を 読み込んで 使う
+「台帳」 を 読み込んで 使う
+
+会員 とは 番号 は 数 で 名前 は 文字列 で 年齢 は 数 の 組
+
+会員 は 【表】 を 導出する
+```
+
+`suru --展開 file` prints the derived code. The file must load both 「蔵」 and 「台帳」 with `読み込んで 使う`, because the derived code uses their names without a prefix.
+
 ## Writing tables in one line (台帳生成)
 
 The record, the two functions and the table definition above can be made from one line. Write the tables in a `.台帳` file, one per line (`#` starts a comment):
@@ -86,7 +101,8 @@ kumu 実行 -- 表.台帳 表定義.suru      # or: suru 生成.suru 表.台帳 
 10. **Counting and deleting by condition.** `表 から 条件 を db で 表件数取得する` gives the number of matching rows (COUNT(*)), and `表 から 条件 を db で 表条件削除する` deletes them and gives how many.
 11. **Relations (one-to-many).** In the child table, `親表 を 「利用者番号」 で 参照列にする` is an integer column with `REFERENCES` to the parent's primary key. `子表 から 「利用者番号」 で 番号 を db に 表関連取得する` gives the children of the parent with that number, in primary key order; the parent of a child is `親表 から （子 の 利用者番号） を db で 表取得する`. Create the parent table first and drop the child table first (SQLite checks the reference only with `PRAGMA foreign_keys = ON`).
 12. **The SQL for queries can be seen too.** `条件 を 方言 で 条件句にする` gives a `表句` (`句文`, the text after WHERE, and `句値群`, the values for its 「?」). `表 から 照会 を 方言 で 表照会文にする` and `表 から 条件 を 方言 で 表件数文にする` give the whole SQL.
-13. **台帳生成 reads its own one-line format.** A record definition in Suru has no field types, so the table cannot be made from it; instead the `.台帳` line names each column with its type, and the record is made from it. Column types are `主鍵`, `整数`, `小数`, `文字列`, `バイト列`, `真偽` and `表 の 参照` (a `参照列` to that table). The first column must be `主鍵`, and there is only one. The record's name is the table's name and the definition is named with 「表」 added (`利用者表`). A wrong line is reported with its line number (`表.台帳 の 2行目: 列の型『年』はありません…`). The tool is written in Suru (生成/台帳生成.suru, with no dependencies) and is checked in CI: the example and the integration tests use files made by it, and CI makes them again and compares.
+13. **台帳生成 reads its own one-line format.** 台帳生成 was made before record definitions in Suru had field types. The `.台帳` line names each column with its type, and the record is made from it. It still covers what 【表】 does not (`表 の 参照`, `小数`). Column types are `主鍵`, `整数`, `小数`, `文字列`, `バイト列`, `真偽` and `表 の 参照` (a `参照列` to that table). The first column must be `主鍵`, and there is only one. The record's name is the table's name and the definition is named with 「表」 added (`利用者表`). A wrong line is reported with its line number (`表.台帳 の 2行目: 列の型『年』はありません…`). The tool is written in Suru (生成/台帳生成.suru, with no dependencies) and is checked in CI: the example and the integration tests use files made by it, and CI makes them again and compares.
+14. **【表】 derives from the record's field types.** The type must have one form and no type parameters (`甲` …). The first field is the primary key and must be `数` (`主鍵列`). The other fields can be `数` (`整数列`), `文字列`, `バイト列` and `真偽`. Other field types, several forms and type parameters are reported when the file is read (「「f2」の型「小数」は【表】の列にできません…」). The table's name is the type's name, and the definition is named with 「表」 added (`会員表`). The deriver is `表導出する` in 台帳.suru (suru-lang/suru#192).
 
 ## Tests
 
@@ -103,6 +119,7 @@ kumu 点検
 - Fetching the children together with the parents in one query (JOIN), and many-to-many through a join table
 - In 台帳生成: a table name different from the record's name, columns that can be NULL (`有無`)
 - Migrations (adding columns)
+- In 【表】: references (`参照列`), `小数` columns and columns that can be NULL
 
 ## License
 
