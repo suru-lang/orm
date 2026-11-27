@@ -104,6 +104,17 @@ kumu 実行 -- 表.台帳 表定義.suru      # or: suru 生成.suru 表.台帳 
 13. **台帳生成 reads its own one-line format.** 台帳生成 was made before record definitions in Suru had field types. The `.台帳` line names each column with its type, and the record is made from it. It still covers what 【表】 does not (`表 の 参照`, `小数`). Column types are `主鍵`, `整数`, `小数`, `文字列`, `バイト列`, `真偽` and `表 の 参照` (a `参照列` to that table). The first column must be `主鍵`, and there is only one. The record's name is the table's name and the definition is named with 「表」 added (`利用者表`). A wrong line is reported with its line number (`表.台帳 の 2行目: 列の型『年』はありません…`). The tool is written in Suru (生成/台帳生成.suru, with no dependencies) and is checked in CI: the example and the integration tests use files made by it, and CI makes them again and compares.
 14. **【表】 derives from the record's field types.** The type must have one form and no type parameters (`甲` …). The first field is the primary key and must be `数` (`主鍵列`). The other fields can be `数` (`整数列`), `文字列`, `バイト列` and `真偽`. Other field types, several forms and type parameters are reported when the file is read (「「f2」の型「小数」は【表】の列にできません…」). The table's name is the type's name, and the definition is named with 「表」 added (`会員表`). The deriver is `表導出する` in 台帳.suru (suru-lang/suru#192).
 
+## API documentation
+
+The API documentation is made from the comments in `台帳.suru`: the head comment of the file and the comment right above each public definition, written in English.
+
+```sh
+kumu 文書                                                            # writes docs/api/台帳.md
+pip install -r docs/requirements.txt && sphinx-build docs docs/_build   # HTML in docs/_build
+```
+
+`docs/` and `.readthedocs.yaml` were written by `kumu 文書 --雛形` (Suru 0.11.0 or later). On every build, Read the Docs downloads kumu 0.11.0, runs `kumu 文書 --出力 docs/api` and then Sphinx, so the generated pages are not committed. The editor hover shows the same descriptions.
+
 ## Tests
 
 ```sh
